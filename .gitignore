@@ -7,3 +7,5 @@ frontend/dist
 rag_project_instructions.txt
 module_have_to_build.txt
 
+.env
+

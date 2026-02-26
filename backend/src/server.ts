@@ -1,8 +1,14 @@
 import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import multer from 'multer';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors());
 app.use(express.json());
@@ -26,6 +32,51 @@ function sessionMiddleware(req: Request, res: Response, next: NextFunction): voi
 }
 
 app.use(sessionMiddleware);
+
+app.post(
+  '/upload',
+  upload.single('file'),
+  async (req: Request, res: Response): Promise<void> => {
+    const sessionId = req.sessionId;
+    const file = req.file;
+
+    if (!file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    const isPdf = file.mimetype === 'application/pdf';
+    const isText =
+      file.mimetype === 'text/plain' || file.originalname.toLowerCase().endsWith('.txt');
+
+    if (!isPdf && !isText) {
+      res.status(400).json({ error: 'Only .pdf and .txt files are supported' });
+      return;
+    }
+
+    // For now we only extract text for plain .txt files.
+    // PDF text extraction will be handled via LangChain-based loaders in the core RAG modules.
+    let extractedText = '';
+
+    if (isText) {
+      extractedText = file.buffer.toString('utf-8');
+    }
+
+    const trimmed = extractedText.trim();
+    const charCount = trimmed.length;
+    const wordCount = trimmed.length > 0 ? trimmed.split(/\s+/).length : 0;
+
+    res.status(200).json({
+      sessionId,
+      fileName: file.originalname,
+      fileSizeBytes: file.size,
+      fileType: isPdf ? 'pdf' : 'txt',
+      charCount,
+      wordCount,
+      chunkCount: 0,
+    });
+  },
+);
 
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({

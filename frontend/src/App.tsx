@@ -1,5 +1,6 @@
 import './App.css'
 import { getOrCreateSessionId } from './session'
+import { FileUpload } from './FileUpload'
 
 function App() {
   const sessionId = getOrCreateSessionId()
@@ -12,7 +13,7 @@ function App() {
         Current session ID:&nbsp;
         <code>{sessionId}</code>
       </p>
-      <p>Backend health-check and modules will be wired next.</p>
+      <FileUpload sessionId={sessionId} />
     </main>
   )
 }
