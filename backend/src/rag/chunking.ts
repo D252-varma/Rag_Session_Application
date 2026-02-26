@@ -1,3 +1,4 @@
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { CHUNK_OVERLAP, CHUNK_SIZE } from '../config/env';
 import { getEmbeddingsClient } from './embeddings';
 
@@ -13,32 +14,6 @@ export interface ChunkingResult {
   chunks: ChunkMetadata[];
 }
 
-function splitTextIntoChunks(text: string): string[] {
-  const chunks: string[] = [];
-  const length = text.length;
-
-  if (length === 0) {
-    return chunks;
-  }
-
-  let start = 0;
-
-  while (start < length) {
-    const end = Math.min(start + CHUNK_SIZE, length);
-    const chunk = text.slice(start, end);
-    chunks.push(chunk);
-
-    if (end === length) {
-      break;
-    }
-
-    const nextStart = end - CHUNK_OVERLAP;
-    start = nextStart > start ? nextStart : end;
-  }
-
-  return chunks;
-}
-
 export async function chunkAndEmbedText(params: {
   sessionId: string;
   documentId: string;
@@ -51,16 +26,21 @@ export async function chunkAndEmbedText(params: {
     return { chunks: [] };
   }
 
-  const pieces = splitTextIntoChunks(trimmed);
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: CHUNK_SIZE,
+    chunkOverlap: CHUNK_OVERLAP,
+  });
+
+  const docs = await splitter.createDocuments([trimmed]);
   const embeddingsClient = getEmbeddingsClient();
 
-  const vectors = await embeddingsClient.embedDocuments(pieces);
+  const vectors = await embeddingsClient.embedDocuments(docs.map((doc) => doc.pageContent));
 
-  const chunks: ChunkMetadata[] = pieces.map((text, index) => ({
+  const chunks: ChunkMetadata[] = docs.map((doc, index) => ({
     sessionId,
     documentId,
     index,
-    text,
+    text: doc.pageContent,
     embedding: vectors[index] ?? [],
   }));
 

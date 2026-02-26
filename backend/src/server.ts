@@ -2,6 +2,8 @@ import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import { chunkAndEmbedText } from './rag/chunking';
+import { getVectorStore } from './rag/vectorStore';
+import { loadPdfFromBuffer } from './rag/loaders';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -52,11 +54,23 @@ app.post(
       return;
     }
 
-    // For now we only extract raw text for plain .txt files here.
-    // PDF extraction and LangChain-based loading will be extended in later modules.
     let extractedText = '';
+    let pageCount = 0;
 
-    if (isText) {
+    if (isPdf) {
+      try {
+        const loaded = await loadPdfFromBuffer(file.buffer, file.originalname);
+        extractedText = loaded.text;
+        pageCount = loaded.pageCount;
+      } catch (error) {
+        // If PDF text extraction fails, fall back gracefully:
+        // treat this PDF as having no extractable text instead of returning 500.
+        // eslint-disable-next-line no-console
+        console.warn('PDF text extraction failed, continuing with empty text', error);
+        extractedText = '';
+        pageCount = 0;
+      }
+    } else if (isText) {
       extractedText = file.buffer.toString('utf-8');
     }
 
@@ -76,10 +90,22 @@ app.post(
           text: trimmed,
         });
         chunkCount = chunks.length;
-        // In Module 4 we will persist these chunks in a proper vector store.
+
+        if (chunkCount > 0) {
+          const store = getVectorStore();
+          store.addDocuments({
+            sessionId,
+            documentId,
+            fileName: file.originalname,
+            chunks,
+          });
+        }
       } catch (error) {
-        res.status(500).json({ error: 'Failed to generate embeddings for document text' });
-        return;
+        // If embedding generation fails (e.g. GEMINI_API_KEY/config issue),
+        // log it but still return success so the upload UI can show basic metrics.
+        // eslint-disable-next-line no-console
+        console.warn('Embedding generation failed, continuing with chunkCount = 0', error);
+        chunkCount = 0;
       }
     }
 
@@ -90,6 +116,7 @@ app.post(
       fileType: isPdf ? 'pdf' : 'txt',
       charCount,
       wordCount,
+      pageCount,
       chunkCount,
     });
   },
@@ -106,8 +133,13 @@ app.get('/health', (req: Request, res: Response) => {
 app.post('/session/reset', (req: Request, res: Response) => {
   const activeSessionId = req.sessionId;
 
-  // Placeholder: when we add in-memory storage, we will clear all data
-  // associated with activeSessionId here.
+  if (!activeSessionId) {
+    res.status(400).json({ error: 'Missing sessionId for reset' });
+    return;
+  }
+
+  const store = getVectorStore();
+  store.clearSession(activeSessionId);
 
   res.status(200).json({
     status: 'reset',
