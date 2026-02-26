@@ -1,9 +1,7 @@
 import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import multer from 'multer';
-
-dotenv.config();
+import { chunkAndEmbedText } from './rag/chunking';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -54,8 +52,8 @@ app.post(
       return;
     }
 
-    // For now we only extract text for plain .txt files.
-    // PDF text extraction will be handled via LangChain-based loaders in the core RAG modules.
+    // For now we only extract raw text for plain .txt files here.
+    // PDF extraction and LangChain-based loading will be extended in later modules.
     let extractedText = '';
 
     if (isText) {
@@ -66,6 +64,25 @@ app.post(
     const charCount = trimmed.length;
     const wordCount = trimmed.length > 0 ? trimmed.split(/\s+/).length : 0;
 
+    let chunkCount = 0;
+
+    if (trimmed.length > 0 && sessionId) {
+      const documentId = `doc-${Date.now()}`;
+
+      try {
+        const { chunks } = await chunkAndEmbedText({
+          sessionId,
+          documentId,
+          text: trimmed,
+        });
+        chunkCount = chunks.length;
+        // In Module 4 we will persist these chunks in a proper vector store.
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to generate embeddings for document text' });
+        return;
+      }
+    }
+
     res.status(200).json({
       sessionId,
       fileName: file.originalname,
@@ -73,7 +90,7 @@ app.post(
       fileType: isPdf ? 'pdf' : 'txt',
       charCount,
       wordCount,
-      chunkCount: 0,
+      chunkCount,
     });
   },
 );

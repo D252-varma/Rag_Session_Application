@@ -100,8 +100,7 @@ export function FileUpload({ sessionId }: FileUploadProps) {
               <strong>Word count:</strong> {result.wordCount}
             </p>
             <p>
-              <strong>Number of chunks created:</strong> {result.chunkCount} (will be populated in
-              module 3)
+              <strong>Number of chunks created:</strong> {result.chunkCount}
             </p>
           </div>
         )}
