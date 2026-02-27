@@ -12,8 +12,4 @@ This project implements a session-based Retrieval-Augmented Generation (RAG) sys
 - `frontend/` – React + TypeScript app (Vite)
 - `backend/` – Node.js + Express + TypeScript API
 
-## Status
-
-- Module 0 (Project Setup & Scaffolding): Implemented.
-- Further modules (session management, file upload, embeddings, retrieval, guardrails, etc.) will be added step by step.
 

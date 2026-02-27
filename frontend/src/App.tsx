@@ -2,7 +2,9 @@ import './App.css'
 import { getOrCreateSessionId } from './session'
 import { FileUpload } from './FileUpload'
 
+// Main App Component
 function App() {
+  // Get active session ID for this user
   const sessionId = getOrCreateSessionId()
 
   return (
@@ -13,6 +15,8 @@ function App() {
         Current session ID:&nbsp;
         <code>{sessionId}</code>
       </p>
+
+      {/* File upload UI */}
       <FileUpload sessionId={sessionId} />
     </main>
   )

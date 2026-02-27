@@ -1,8 +1,10 @@
-import { useState, ChangeEvent, FormEvent } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { buildSessionHeaders } from './session'
 
+// Upload status states
 type UploadStatus = 'idle' | 'uploading' | 'success' | 'error'
 
+// Result returned from backend after processing the file
 interface UploadResult {
   fileName: string
   fileType: string
@@ -12,15 +14,18 @@ interface UploadResult {
 }
 
 interface FileUploadProps {
-  sessionId: string
+  sessionId: string // ID for linking uploads to the active user
 }
 
+// Component for uploading .txt and .pdf files to extract and embed
 export function FileUpload({ sessionId }: FileUploadProps) {
+  // Component state
   const [file, setFile] = useState<File | null>(null)
   const [status, setStatus] = useState<UploadStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<UploadResult | null>(null)
 
+  // Reset status and store file on new selection
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextFile = event.target.files?.[0] ?? null
     setFile(nextFile)
@@ -28,6 +33,7 @@ export function FileUpload({ sessionId }: FileUploadProps) {
     setError(null)
   }
 
+  // Submit file to backend
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
 
@@ -47,12 +53,13 @@ export function FileUpload({ sessionId }: FileUploadProps) {
       const response = await fetch('http://localhost:4000/upload', {
         method: 'POST',
         headers: {
-          ...buildSessionHeaders(sessionId),
+          ...buildSessionHeaders(sessionId), // Add session headers
         },
         body: formData,
       })
 
       if (!response.ok) {
+        // Handle upload errors
         const data = await response.json().catch(() => ({}))
         const message = (data && (data.error as string)) || 'Upload failed'
         setStatus('error')
@@ -60,6 +67,7 @@ export function FileUpload({ sessionId }: FileUploadProps) {
         return
       }
 
+      // Record success metrics
       const data = (await response.json()) as UploadResult
       setResult(data)
       setStatus('success')
