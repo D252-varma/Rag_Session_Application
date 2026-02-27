@@ -36,6 +36,7 @@ export interface VectorStore {
     topK?: number;
     similarityThreshold?: number;
   }): QueryResult[];
+  getChunkCount(sessionId: string): number;
 }
 
 // Global in-memory storage holding session caches
@@ -51,36 +52,36 @@ function getOrCreateSession(sessionId: string): SessionStore {
   return store;
 }
 
-// Calculates vector magnitude (L2 Norm)
-function getMagnitude(vec: number[]): number {
-  let sum = 0;
-  for (let i = 0; i < vec.length; i += 1) {
-    const val = vec[i] ?? 0;
-    sum += val * val;
-  }
-  return Math.sqrt(sum);
+// L2 Normalization requested by explicit user debug checklist
+function normalize(vec: number[]): number[] {
+  const norm = Math.sqrt(vec.reduce((sum, v) => sum + v * v, 0));
+  if (norm === 0) return vec;
+  return vec.map((v) => v / norm);
 }
 
-// Pre-normalizes a raw vector array into a unit vector
-function normalizeVector(vec: number[]): number[] {
-  const mag = getMagnitude(vec);
-  if (mag === 0) return vec;
-  return vec.map((val) => val / mag);
-}
-
-// Calculates distance between unit vector arrays 
-// (assuming inputs are pre-normalized, so it relies on pure dot product)
+// Calculates distance between vector arrays (higher values mean more similar text)
 function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length === 0 || b.length === 0 || a.length !== b.length) {
     return 0;
   }
 
   let dot = 0;
+  let normA = 0;
+  let normB = 0;
+
   for (let i = 0; i < a.length; i += 1) {
-    dot += (a[i] ?? 0) * (b[i] ?? 0);
+    const va = a[i] ?? 0;
+    const vb = b[i] ?? 0;
+    dot += va * vb;
+    normA += va * va;
+    normB += vb * vb;
   }
 
-  return dot;
+  if (normA === 0 || normB === 0) {
+    return 0;
+  }
+
+  return dot / Math.sqrt(normA * normB);
 }
 
 class InMemoryVectorStore implements VectorStore {
@@ -99,14 +100,11 @@ class InMemoryVectorStore implements VectorStore {
     const sessionStore = getOrCreateSession(sessionId);
     const existing = sessionStore.documents.get(documentId);
 
-    const storedChunks: StoredChunk[] = chunks.map((chunk) => {
-      // Pre-normalize embedding vector immediately on upload to make queries strictly dot-product
-      return {
-        ...chunk,
-        embedding: normalizeVector(chunk.embedding),
-        fileName: fileName ?? null,
-      };
-    });
+    const storedChunks: StoredChunk[] = chunks.map((chunk) => ({
+      ...chunk,
+      embedding: normalize(chunk.embedding), // Normalize during index creation
+      fileName: fileName ?? null,
+    }));
 
     if (existing) {
       // Append chunks to existing document
@@ -153,14 +151,14 @@ class InMemoryVectorStore implements VectorStore {
       return [];
     }
 
-    // Step 0: Pre-normalize the incoming search query so it works seamlessly against normalized chunk storage
-    const normalizedQuery = normalizeVector(embedding);
+    // Step 0: Ensure the query is L2 Normalized for safe dot-product distances
+    const normalizedQuery = normalize(embedding);
 
     // Step 1: Calculate raw similarity scores against the source query vector
-    let scored: QueryResult[] = allChunks.map((chunk) => ({
-      chunk,
-      score: cosineSimilarity(normalizedQuery, chunk.embedding),
-    }));
+    let scored: QueryResult[] = allChunks.map((chunk) => {
+      const score = cosineSimilarity(normalizedQuery, chunk.embedding);
+      return { chunk, score };
+    });
 
     // Step 2: Filter results dynamically against the baseline acceptable match threshold
     scored = scored.filter((x) => x.score >= similarityThreshold);
@@ -169,7 +167,26 @@ class InMemoryVectorStore implements VectorStore {
     scored.sort((a, b) => b.score - a.score);
 
     // Step 4: Constrain returned size to the topK configured values
-    return scored.slice(0, Math.max(0, topK));
+    const topChunks = scored.slice(0, Math.max(0, topK));
+
+    // Professional Debug Telemetry
+    console.log("Stored chunks:", allChunks.length);
+    console.log("Retrieved chunks:", topChunks.length);
+    console.log("Top similarity score:", topChunks[0]?.score ?? 'N/A');
+
+    return topChunks;
+  }
+
+  // Debug visibility helper to check how many embeddings are stored for a session
+  getChunkCount(sessionId: string): number {
+    const sessionStore = sessions.get(sessionId);
+    if (!sessionStore) return 0;
+
+    let total = 0;
+    for (const doc of sessionStore.documents.values()) {
+      total += doc.chunks.length;
+    }
+    return total;
   }
 }
 

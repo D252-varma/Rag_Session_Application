@@ -13,11 +13,12 @@ export function getEmbeddingsClient(): GoogleGenerativeAIEmbeddings {
     return embeddingsClient;
   }
 
+  // Use a unified model to guarantee matching text-embedding generation semantics 
+  // for both Document Upload context and User Question extraction
   embeddingsClient = new GoogleGenerativeAIEmbeddings({
     apiKey: GEMINI_API_KEY,
-    model: 'text-embedding-004',
+    model: 'gemini-embedding-001',
   });
 
   return embeddingsClient;
 }
-

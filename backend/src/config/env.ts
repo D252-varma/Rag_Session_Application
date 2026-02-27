@@ -18,9 +18,9 @@ if (!GEMINI_API_KEY) {
   console.warn('GEMINI_API_KEY is not set. Embedding generation will fail until it is configured.');
 }
 
-export const CHUNK_SIZE = Number.parseInt(process.env.CHUNK_SIZE ?? '1000', 10);
-export const CHUNK_OVERLAP = Number.parseInt(process.env.CHUNK_OVERLAP ?? '200', 10);
+export const CHUNK_SIZE = Number.parseInt(process.env.CHUNK_SIZE ?? '300', 10);
+export const CHUNK_OVERLAP = Number.parseInt(process.env.CHUNK_OVERLAP ?? '50', 10);
 
-export const TOP_K = Number.parseInt(process.env.TOP_K ?? '5', 10);
-export const SIMILARITY_THRESHOLD = Number.parseFloat(process.env.SIMILARITY_THRESHOLD ?? '0.4');
+export const TOP_K = Number.parseInt(process.env.TOP_K ?? '3', 10);
+export const SIMILARITY_THRESHOLD = Number.parseFloat(process.env.SIMILARITY_THRESHOLD ?? '0.15');
 

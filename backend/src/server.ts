@@ -5,6 +5,7 @@ import { chunkAndEmbedText } from './rag/chunking';
 import { getVectorStore } from './rag/vectorStore';
 import { getEmbeddingsClient } from './rag/embeddings';
 import { loadPdfFromBuffer } from './rag/loaders';
+import { generateAnswer } from './rag/generations';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -157,6 +158,11 @@ app.post('/query', async (req: Request, res: Response): Promise<void> => {
     }
 
     const store = getVectorStore();
+    const totalChunks = store.getChunkCount(sessionId);
+
+    // Log tracking metric requested by Orchestration Debug module
+    console.log(`[RAG Debug] Run retrieval against ${totalChunks} stored chunks for session ${sessionId}`);
+
     const results = store.query({
       sessionId,
       embedding: queryEmbedding,
@@ -164,10 +170,29 @@ app.post('/query', async (req: Request, res: Response): Promise<void> => {
       similarityThreshold,
     });
 
-    res.status(200).json({ results });
-  } catch (error) {
+    // Log query matched results
+    console.log(`[RAG Debug] Query matched ${results.length} chunks meeting threshold >= ${similarityThreshold ?? 'default'}`);
+
+    // Guardrail: Pass retrieved chunks into standard prompt template
+    const retrievedChunks = results.map(r => r.chunk);
+    const answer = await generateAnswer(query, retrievedChunks);
+
+    // Return the generated answer paired with its semantic sources and debugging counts
+    res.status(200).json({
+      answer,
+      results,
+      debug: {
+        totalStoredChunks: totalChunks,
+        retrievedChunks: results.length,
+        topScore: results.length > 0 ? results[0]?.score : null,
+      }
+    });
+  } catch (error: any) {
     console.error('Error during query execution:', error);
-    res.status(500).json({ error: 'Internal server error during search query' });
+    res.status(500).json({
+      error: 'Internal server error during search query',
+      details: error.message || String(error)
+    });
   }
 });
 

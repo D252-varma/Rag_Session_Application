@@ -14,8 +14,8 @@
   "description": "",
   "dependencies": {
     "@langchain/community": "^1.1.19",
-    "@langchain/core": "^1.1.28",
-    "@langchain/google-genai": "^2.1.20",
+    "@langchain/core": "^1.1.29",
+    "@langchain/google-genai": "^2.1.21",
     "@types/multer": "^2.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
