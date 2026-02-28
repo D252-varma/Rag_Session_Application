@@ -10,6 +10,15 @@ dotenv.config({
 });
 
 export const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? '';
+export const LANGSMITH_API_KEY = process.env.LANGSMITH_API_KEY ?? '';
+export const LANGCHAIN_PROJECT = process.env.LANGCHAIN_PROJECT ?? 'rag-session-app';
+
+// Enforce Langsmith tracing configuration globally
+if (LANGSMITH_API_KEY) {
+  process.env.LANGCHAIN_TRACING_V2 = "true";
+  process.env.LANGCHAIN_API_KEY = LANGSMITH_API_KEY;
+  process.env.LANGCHAIN_PROJECT = LANGCHAIN_PROJECT;
+}
 
 if (!GEMINI_API_KEY) {
   // We log a warning instead of throwing so the server can still start;

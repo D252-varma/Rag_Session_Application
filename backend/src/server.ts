@@ -6,6 +6,7 @@ import { getVectorStore } from './rag/vectorStore';
 import { getEmbeddingsClient } from './rag/embeddings';
 import { loadPdfFromBuffer } from './rag/loaders';
 import { generateAnswer } from './rag/generations';
+import { randomUUID } from 'crypto';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -202,9 +203,12 @@ app.post('/query', async (req: Request, res: Response): Promise<void> => {
     // Log query matched results
     console.log(`[RAG Debug] Query matched ${results.length} chunks meeting threshold >= ${similarityThreshold ?? 'default'}`);
 
+    // Create a deterministic UUID for this specific query run tracing in LangSmith
+    const runName = `Query-${randomUUID()}`;
+
     // Guardrail: Pass retrieved chunks into standard prompt template
     const retrievedChunks = results.map(r => r.chunk);
-    const answer = await generateAnswer(query, retrievedChunks, history);
+    const answer = await generateAnswer(query, retrievedChunks, history, runName, sessionId);
 
     // Return the generated answer paired with its semantic sources and debugging counts
     res.status(200).json({

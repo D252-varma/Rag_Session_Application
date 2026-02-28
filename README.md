@@ -53,6 +53,21 @@ To ensure safety and prevent tokenizer burnout (or API crashes):
 
 ---
 
+## 🔍 Enterprise Observability with LangSmith
+
+This project is deeply instrumented with **LangSmith** to provide production-grade tracing, monitoring, and debugging across the entire RAG pipeline. This goes far beyond basic console logging.
+
+**Enhanced Observability Features:**
+- **Full Execution Tracing**: Every user query generates a unique, deterministic `Query-[UUID]`, allowing you to trace the exact waterfall of latency operations from the incoming HTTP request down to the final LLM response string.
+- **Custom Tool Tracking (`@traceable`)**: Beyond standard LangChain instrumentation, we deployed explicit `@traceable` decorators onto bespoke internal methods. This tracks the precise latency and payload data of:
+  - PDF/Text Buffer Extraction (`run_type: "tool"`)
+  - Document Chunking & Vector Creation 
+  - ChromaDB Native Insertion Queries 
+  - ChromaDB Vector Retrieval (`run_type: "retriever"`)
+- **Metadata Injection**: Each trace dynamically attaches the active `session_id`, logging it directly into the LangSmith dashboard. This guarantees you can analyze user journeys, identify hallucination paths, or debug isolated retrieval failures on a strict per-user basis.
+
+---
+
 ## 🛠 Local Setup Instructions
 
 ### Prerequisites

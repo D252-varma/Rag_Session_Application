@@ -43,7 +43,13 @@ Current Question:
 
 const qaPrompt = PromptTemplate.fromTemplate(QA_PROMPT_TEMPLATE);
 
-export async function generateAnswer(query: string, chunks: StoredChunk[], history?: any[]): Promise<string> {
+export async function generateAnswer(
+    query: string,
+    chunks: StoredChunk[],
+    history?: any[],
+    runName?: string,
+    sessionId?: string
+): Promise<string> {
     // Edge case: If no chunks met the similarity threshold, we bypass the LLM entirely
     // as an application-layer guardrail
     if (chunks.length === 0) {
@@ -86,11 +92,22 @@ export async function generateAnswer(query: string, chunks: StoredChunk[], histo
     // Create an LCEL chain: Prompt -> LLM -> String Output
     const chain = qaPrompt.pipe(llm).pipe(new StringOutputParser());
 
-    const response = await chain.invoke({
-        retrieved_chunks: context,
-        conversation_history: historyTranscript,
-        user_question: query,
-    });
+    // Execute chain with explicit LangSmith tracking configuration
+    const response = await chain.invoke(
+        {
+            retrieved_chunks: context,
+            conversation_history: historyTranscript,
+            user_question: query,
+        },
+        {
+            runName: runName || "Anonymous-Query",
+            tags: [sessionId || "anonymous"],
+            metadata: {
+                session_id: sessionId || "anonymous",
+                module: "rag-session-app",
+            }
+        }
+    );
 
     return response;
 }
