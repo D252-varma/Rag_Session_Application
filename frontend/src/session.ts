@@ -37,3 +37,10 @@ export function buildSessionHeaders(sessionId: string): HeadersInit {
   };
 }
 
+// Clear the session ID from local storage to force a hard session reset
+export function clearSessionLocalStorage(): void {
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  }
+}
+

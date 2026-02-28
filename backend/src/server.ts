@@ -135,7 +135,7 @@ app.post(
 // Endpoint for testing searches against the document store
 app.post('/query', async (req: Request, res: Response): Promise<void> => {
   const sessionId = req.sessionId;
-  const { query, topK, similarityThreshold } = req.body;
+  const { query, history, topK, similarityThreshold } = req.body;
 
   if (!sessionId) {
     res.status(400).json({ error: 'Missing sessionId' });
@@ -175,7 +175,7 @@ app.post('/query', async (req: Request, res: Response): Promise<void> => {
 
     // Guardrail: Pass retrieved chunks into standard prompt template
     const retrievedChunks = results.map(r => r.chunk);
-    const answer = await generateAnswer(query, retrievedChunks);
+    const answer = await generateAnswer(query, retrievedChunks, history);
 
     // Return the generated answer paired with its semantic sources and debugging counts
     res.status(200).json({

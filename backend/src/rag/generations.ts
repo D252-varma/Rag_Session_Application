@@ -20,6 +20,7 @@ export function getChatModel(): ChatGoogleGenerativeAI {
         model: 'gemini-2.5-flash', // Key bound dynamically mapped model
         apiKey: GEMINI_API_KEY,
         temperature: 0, // Keep temperature 0 for strictly analytical grounded answers
+        maxRetries: 0, // CRITICAL: Stop Langchain from infinitely hanging the Node thread on 429 Quota Rate Limits
     });
 
     return chatModel;
@@ -34,12 +35,15 @@ If the answer is not in the context, say:
 Context:
 {retrieved_chunks}
 
-Question:
+Previous Conversation History:
+{conversation_history}
+
+Current Question:
 {user_question}`;
 
 const qaPrompt = PromptTemplate.fromTemplate(QA_PROMPT_TEMPLATE);
 
-export async function generateAnswer(query: string, chunks: StoredChunk[]): Promise<string> {
+export async function generateAnswer(query: string, chunks: StoredChunk[], history?: any[]): Promise<string> {
     // Edge case: If no chunks met the similarity threshold, we bypass the LLM entirely
     // as an application-layer guardrail
     if (chunks.length === 0) {
@@ -49,6 +53,22 @@ export async function generateAnswer(query: string, chunks: StoredChunk[]): Prom
     // Combine the text from the top retrieved chunks
     const context = chunks.map((chunk) => chunk.text).join('\n---\n');
 
+    let historyTranscript = "No previous context.";
+
+    if (history && Array.isArray(history) && history.length > 0) {
+        // Token Safeguard: Limit the injected history transcript to the last 6 messages
+        const constrainedHistory = history.slice(-6);
+
+        historyTranscript = constrainedHistory
+            .filter(msg => {
+                // Drop error states or placeholder searching bubbles from the backend injection
+                if (msg.role === 'assistant' && msg.status !== 'success') return false;
+                return true;
+            })
+            .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+            .join('\n\n');
+    }
+
     const llm = getChatModel();
 
     // Create an LCEL chain: Prompt -> LLM -> String Output
@@ -56,6 +76,7 @@ export async function generateAnswer(query: string, chunks: StoredChunk[]): Prom
 
     const response = await chain.invoke({
         retrieved_chunks: context,
+        conversation_history: historyTranscript,
         user_question: query,
     });
 
