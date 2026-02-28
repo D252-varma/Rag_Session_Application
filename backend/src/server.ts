@@ -125,7 +125,7 @@ app.post(
         // Store vectors locally mapping to the session
         if (chunkCount > 0) {
           const store = getVectorStore();
-          store.addDocuments({
+          await store.addDocuments({
             sessionId,
             documentId,
             fileName: file.originalname,
@@ -180,12 +180,12 @@ app.post('/query', async (req: Request, res: Response): Promise<void> => {
     }
 
     const store = getVectorStore();
-    const totalChunks = store.getChunkCount(sessionId);
+    const totalChunks = await store.getChunkCount(sessionId);
 
     // Log tracking metric requested by Orchestration Debug module
     console.log(`[RAG Debug] Run retrieval against ${totalChunks} stored chunks for session ${sessionId}`);
 
-    const results = store.query({
+    const results = await store.query({
       sessionId,
       embedding: queryEmbedding,
       topK,
@@ -228,7 +228,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // Purges a session's vector store records
-app.post('/session/reset', (req: Request, res: Response) => {
+app.post('/session/reset', async (req: Request, res: Response) => {
   const activeSessionId = req.sessionId;
 
   if (!activeSessionId) {
@@ -238,7 +238,7 @@ app.post('/session/reset', (req: Request, res: Response) => {
 
   // Clear specific session
   const store = getVectorStore();
-  store.clearSession(activeSessionId);
+  await store.clearSession(activeSessionId);
 
   res.status(200).json({
     status: 'reset',

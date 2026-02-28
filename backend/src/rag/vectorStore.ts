@@ -16,7 +16,7 @@ interface SessionStore {
 }
 
 // Similarity score mapping to text match
-interface QueryResult {
+export interface QueryResult {
   chunk: StoredChunk;
   score: number;
 }
@@ -28,15 +28,15 @@ export interface VectorStore {
     documentId: string;
     fileName?: string;
     chunks: ChunkMetadata[];
-  }): void;
-  clearSession(sessionId: string): void;
+  }): Promise<void>;
+  clearSession(sessionId: string): Promise<void>;
   query(params: {
     sessionId: string;
     embedding: number[];
     topK?: number;
     similarityThreshold?: number;
-  }): QueryResult[];
-  getChunkCount(sessionId: string): number;
+  }): Promise<QueryResult[]>;
+  getChunkCount(sessionId: string): Promise<number>;
 }
 
 // Global in-memory storage holding session caches
@@ -86,12 +86,12 @@ function cosineSimilarity(a: number[], b: number[]): number {
 
 class InMemoryVectorStore implements VectorStore {
   // Add vectorized chunks to memory mapped by session
-  addDocuments(params: {
+  async addDocuments(params: {
     sessionId: string;
     documentId: string;
     fileName?: string;
     chunks: ChunkMetadata[];
-  }): void {
+  }): Promise<void> {
     const { sessionId, documentId, fileName, chunks } = params;
     if (chunks.length === 0) {
       return;
@@ -123,17 +123,17 @@ class InMemoryVectorStore implements VectorStore {
   }
 
   // Deletes memory allocations for a single user's session
-  clearSession(sessionId: string): void {
+  async clearSession(sessionId: string): Promise<void> {
     sessions.delete(sessionId);
   }
 
   // Performs exhaustive linear scan vector search within a session boundary
-  query(params: {
+  async query(params: {
     sessionId: string;
     embedding: number[];
     topK?: number;
     similarityThreshold?: number;
-  }): QueryResult[] {
+  }): Promise<QueryResult[]> {
     const { sessionId, embedding, topK = 5, similarityThreshold = 0.4 } = params;
 
     // Quick exit if session doesn't exist bounds checking
@@ -178,7 +178,7 @@ class InMemoryVectorStore implements VectorStore {
   }
 
   // Debug visibility helper to check how many embeddings are stored for a session
-  getChunkCount(sessionId: string): number {
+  async getChunkCount(sessionId: string): Promise<number> {
     const sessionStore = sessions.get(sessionId);
     if (!sessionStore) return 0;
 
@@ -190,7 +190,9 @@ class InMemoryVectorStore implements VectorStore {
   }
 }
 
-const vectorStoreInstance: VectorStore = new InMemoryVectorStore();
+import { ChromaStore } from './chromaStore';
+
+const vectorStoreInstance: VectorStore = new ChromaStore();
 
 export function getVectorStore(): VectorStore {
   return vectorStoreInstance;
