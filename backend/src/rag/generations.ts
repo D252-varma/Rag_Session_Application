@@ -50,8 +50,14 @@ export async function generateAnswer(query: string, chunks: StoredChunk[], histo
         return "This question is outside the scope of uploaded documents.";
     }
 
-    // Combine the text from the top retrieved chunks
-    const context = chunks.map((chunk) => chunk.text).join('\n---\n');
+    // Token Safeguard: Limit Context length to approx 2,000 tokens (8,000 chars) max to prevent crashing model buffers
+    const MAX_CONTEXT_LENGTH = 8000;
+    const rawContext = chunks.map((chunk) => chunk.text).join('\n---\n');
+    const context = rawContext.length > MAX_CONTEXT_LENGTH
+        ? rawContext.slice(0, MAX_CONTEXT_LENGTH) + '\n... [Remaining context truncated for length]'
+        : rawContext;
+
+    console.log(`[RAG Debug] Injecting ${context.length} characters of context into final prompt`);
 
     let historyTranscript = "No previous context.";
 
@@ -67,6 +73,12 @@ export async function generateAnswer(query: string, chunks: StoredChunk[], histo
             })
             .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
             .join('\n\n');
+
+        // Token Safeguard: Ensure conversation history does not balloon the prompt payload (cap at ~500 tokens / 2,000 characters)
+        const MAX_HISTORY_LENGTH = 2000;
+        if (historyTranscript.length > MAX_HISTORY_LENGTH) {
+            historyTranscript = '... [Oldest messages truncated]\n' + historyTranscript.slice(-MAX_HISTORY_LENGTH);
+        }
     }
 
     const llm = getChatModel();

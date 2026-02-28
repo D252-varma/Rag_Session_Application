@@ -169,6 +169,13 @@ app.post('/query', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
+  // Token Guardrail: Prevent abusive or excessively long prompts from burning tokenizer limits
+  if (query.trim().length > 500) {
+    console.warn(`[Guardrail] Blocked overly long query (${query.length} chars) from session ${sessionId}`);
+    res.status(400).json({ error: 'Question is too long. Please restrict your query to 500 characters or less.' });
+    return;
+  }
+
   try {
     const embeddingsClient = getEmbeddingsClient();
     const [queryEmbedding] = await embeddingsClient.embedDocuments([query]);
