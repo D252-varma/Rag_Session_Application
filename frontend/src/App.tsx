@@ -1,14 +1,23 @@
 import './App.css'
 import { getOrCreateSessionId, clearSessionLocalStorage } from './session'
-import { FileUpload } from './FileUpload'
-import { QuestionAnswering } from './QuestionAnswering'
+import { UploadPanel } from './UploadPanel'
+import { ChatWindow } from './ChatWindow'
+import { SettingsModal } from './SettingsModal'
 import { useState } from 'react'
+import { RefreshCw, Settings } from 'lucide-react'
 
 // Main App Component
 function App() {
   // Get active session ID for this user
   const sessionId = getOrCreateSessionId()
   const [isResetting, setIsResetting] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Unified Retrieval & Guardrails State
+  const [chunkSize, setChunkSize] = useState(1000);
+  const [chunkOverlap, setChunkOverlap] = useState(200);
+  const [topK, setTopK] = useState(3);
+  const [similarityThreshold, setSimilarityThreshold] = useState(0.15);
 
   const handleResetSession = async () => {
     if (!window.confirm("Are you sure you want to reset your session? All uploaded files, knowledge vectors, and chat history will be permanently deleted.")) {
@@ -39,62 +48,137 @@ function App() {
 
   return (
     <main className="app-root">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1>Session-Based RAG App</h1>
-          <p>Frontend is running.</p>
-          <p>
-            Current session ID:&nbsp;
-            <code>{sessionId}</code>
-          </p>
+      {/* Fluid Background Layer */}
+      <div className="fluid-bg-container">
+        <div className="fluid-orb fluid-orb-1"></div>
+        <div className="fluid-orb fluid-orb-2"></div>
+        <div className="fluid-orb fluid-orb-3"></div>
+      </div>
+
+      {/* Floating Header Actions */}
+      <div style={{
+        position: 'absolute',
+        top: '2rem',
+        right: '2rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        zIndex: 100
+      }}>
+        <div style={{
+          fontSize: '0.75rem',
+          color: 'var(--text-tertiary)',
+          fontFamily: 'monospace',
+          background: 'var(--glass-bg)',
+          backdropFilter: 'var(--glass-blur)',
+          padding: '0.5rem 1rem',
+          borderRadius: '20px',
+          border: '1px solid var(--glass-border)'
+        }}>
+          ID: {sessionId.split('-')[0]}
         </div>
+
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="premium-glass-panel"
+          style={{
+            padding: '0.6rem 0.8rem',
+            background: 'var(--glass-bg)',
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--glass-border)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+            e.currentTarget.style.color = 'var(--text-primary)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = 'var(--glass-bg)';
+            e.currentTarget.style.color = 'var(--text-secondary)';
+          }}
+        >
+          <Settings size={18} />
+        </button>
 
         <button
           onClick={handleResetSession}
           disabled={isResetting}
-          className="glass-panel"
+          className="premium-glass-panel"
           style={{
-            padding: '0.75rem 1.5rem',
-            background: 'rgba(255, 50, 50, 0.1)',
+            padding: '0.6rem 1.25rem',
+            background: 'rgba(255, 50, 50, 0.05)',
             color: '#ff6b6b',
-            border: '1px solid rgba(255, 50, 50, 0.3)',
+            border: '1px solid rgba(255, 50, 50, 0.2)',
             cursor: isResetting ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 4px 15px rgba(255, 50, 50, 0.1)',
-            fontWeight: 600,
+            fontWeight: 500,
+            fontSize: '0.9rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem'
+            gap: '0.5rem',
+            transition: 'all 0.3s ease'
           }}
           onMouseOver={(e) => {
             if (!isResetting) {
-              e.currentTarget.style.background = 'rgba(255, 50, 50, 0.2)';
-              e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 50, 50, 0.3)';
+              e.currentTarget.style.background = 'rgba(255, 50, 50, 0.15)';
+              e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 50, 50, 0.2)';
             }
           }}
           onMouseOut={(e) => {
             if (!isResetting) {
-              e.currentTarget.style.background = 'rgba(255, 50, 50, 0.1)';
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 50, 50, 0.1)';
+              e.currentTarget.style.background = 'rgba(255, 50, 50, 0.05)';
+              e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
             }
           }}
         >
-          {isResetting ? 'Erasing...' : (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-              Reset Session
-            </>
-          )}
+          <RefreshCw size={16} className={isResetting ? 'animate-spin' : ''} />
+          {isResetting ? 'Erasing...' : 'Reset Session'}
         </button>
       </div>
 
-      {/* File upload UI */}
-      <FileUpload sessionId={sessionId} />
+      <div style={{
+        marginTop: '8rem',
+        marginBottom: '3rem',
+        textAlign: 'center',
+        padding: '0 1rem',
+        animation: 'soft-fade-in 1s ease-out forwards'
+      }}>
+        <h1 style={{
+          fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
+          fontWeight: 800,
+          background: 'linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.7) 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          lineHeight: 1.1,
+          letterSpacing: '-0.02em',
+          maxWidth: '900px',
+          margin: '0 auto',
+          textShadow: '0 0 40px rgba(255,255,255,0.1)'
+        }}>
+          THIS IS SESSION-BASED RAG APPLICATION
+        </h1>
+      </div>
 
-      <hr style={{ margin: '2rem 0' }} />
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', zIndex: 10 }}>
+        <UploadPanel sessionId={sessionId} chunkSize={chunkSize} chunkOverlap={chunkOverlap} />
+        <ChatWindow sessionId={sessionId} topK={topK} similarityThreshold={similarityThreshold} />
+      </div>
 
-      {/* Chat application view bounds */}
-      <QuestionAnswering sessionId={sessionId} />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        chunkSize={chunkSize}
+        setChunkSize={setChunkSize}
+        chunkOverlap={chunkOverlap}
+        setChunkOverlap={setChunkOverlap}
+        topK={topK}
+        setTopK={setTopK}
+        similarityThreshold={similarityThreshold}
+        setSimilarityThreshold={setSimilarityThreshold}
+      />
     </main>
   )
 }

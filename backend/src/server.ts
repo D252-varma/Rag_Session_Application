@@ -42,10 +42,30 @@ app.post(
   '/upload',
   upload.single('file'),
   async (req: Request, res: Response): Promise<void> => {
+    // 1. Verify session
     const sessionId = req.sessionId;
-    const file = req.file;
+    if (!sessionId) {
+      res.status(400).json({ error: 'Missing sessionId' });
+      return;
+    }
 
-    // Check if file exists
+    // 2. Extract configuration payload if available
+    const { chunkSize: rawChunkSize, chunkOverlap: rawChunkOverlap } = req.body;
+    let chunkSize: number | undefined;
+    let chunkOverlap: number | undefined;
+
+    if (rawChunkSize) {
+      const parsed = parseInt(String(rawChunkSize), 10);
+      if (!isNaN(parsed) && parsed > 0) chunkSize = parsed;
+    }
+
+    if (rawChunkOverlap) {
+      const parsed = parseInt(String(rawChunkOverlap), 10);
+      if (!isNaN(parsed) && parsed >= 0) chunkOverlap = parsed;
+    }
+
+    // 3. Process File Payload
+    const file = req.file;
     if (!file) {
       res.status(400).json({ error: 'No file uploaded' });
       return;
@@ -97,6 +117,8 @@ app.post(
           sessionId,
           documentId,
           text: trimmed,
+          ...(chunkSize !== undefined && { chunkSize }),
+          ...(chunkOverlap !== undefined && { chunkOverlap })
         });
         chunkCount = chunks.length;
 

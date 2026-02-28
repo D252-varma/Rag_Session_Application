@@ -20,8 +20,10 @@ export async function chunkAndEmbedText(params: {
   sessionId: string;
   documentId: string;
   text: string;
+  chunkSize?: number;
+  chunkOverlap?: number;
 }): Promise<ChunkingResult> {
-  const { sessionId, documentId, text } = params;
+  const { sessionId, documentId, text, chunkSize, chunkOverlap } = params;
 
   // Skip empty text
   const trimmed = text.trim();
@@ -31,8 +33,8 @@ export async function chunkAndEmbedText(params: {
 
   // Split text based on chunk size & overlap config
   const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: CHUNK_SIZE,
-    chunkOverlap: CHUNK_OVERLAP,
+    chunkSize: chunkSize ?? CHUNK_SIZE,
+    chunkOverlap: chunkOverlap ?? CHUNK_OVERLAP,
   });
 
   const docs = await splitter.createDocuments([trimmed]);
