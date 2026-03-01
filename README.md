@@ -6,11 +6,31 @@ This application maps user uploads into **ChromaDB** to securely restrict Gemini
 
 ---
 
-## 🎨 Premium UI & User Experience
-- **Liquid Glassmorphism:** Features a sleek dark theme (`#020617`), radial glow spotlights, and frosted `<backdrop-filter>` interfaces mimicking premium OS-level assistant interactions.
-- **Floating Input:** Contextual chat bar suspended cleanly at the bottom of the viewport.
-- **Fluid Animation:** Messages animate gracefully using `framer-motion` spring physics.
-- **Dynamic Guardrails Settings:** End-users dynamically control backend vector limits (Chunk Size, Overlapse, Top K limits, Similarity Scores) without restarting the Node server.
+## 💻 Frontend Features & UI
+
+The frontend application empowers you with a stunning user experience alongside fine-grained runtime control over the background RAG pipeline.
+
+### Design
+- **Liquid Glassmorphism:** Features a sleek dark theme (`#020617`) with radial glow spotlights and frosted `<backdrop-filter>` interfaces, mimicking premium OS-level interactions.
+- **Floating Input & Fluid Animations:** The contextual chat bar is suspended cleanly at the bottom of the viewport, with messages animating gracefully via `framer-motion` spring physics.
+- **Mobile Responsive:** Fully adaptive CSS architecture ensuring seamless scaling across all desktop and mobile device viewports.
+
+### Configurable Retrieval Settings
+You can dynamically explicitly tweak backend vector metrics strictly from the frontend without ever restarting the Express server. The following metrics are easily configurable:
+- **Chunk size**: Adjust the character limit for document text splitting.
+- **Chunk overlap**: Control the context retention shared between adjacent chunks.
+- **Top K**: Dictate the absolute number of contextual vectors retrieved.
+- **Similarity threshold**: Command how strictly the LLM filters out low-matching chunks to prevent hallucinations.
+
+![Retrieval Configurable Settings preview](/Users/deepakvarma/Desktop/rag-session-app/assets/Retrieval Configurable Settings preview.png)
+
+### Active Document Management & Zero Hallucination
+- **Active Documents Sidebar**: A dedicated panel that dynamically lists all uploaded and vectorized files resident in the current knowledge base.
+- **Multi-Document Retrieval**: The chatbot seamlessly supports concurrent multi-document retrieval. Users can choose to clear the context completely to start a new session, or continue querying across all historically uploaded documents within their active session. 
+- **Clear Chat & Session Reset**: Easily erase the current conversation via "Clear Chat" or fully purge all vectorized documents and start fresh via "Reset Session".
+- **Zero Hallucination Guarantee**: Because the UI strictly manages active context files and locks queries when empty, the AI is 100% constrained to ground its answers exclusively in the uploaded sources. Each response strictly traces back to the source attribution to ensure transparency and utterly prevent hallucinations.
+
+![Active Document Management view](/Users/deepakvarma/Desktop/rag-session-app/assets/Active Document Management view.png)
 
 ---
 
@@ -53,6 +73,22 @@ To ensure safety and prevent tokenizer burnout (or API crashes):
 
 ---
 
+## 🔐 Session Management & Isolation
+
+To guarantee precise memory usage and strict data isolation, the application enforces the following behaviors:
+
+### Session Management
+- **Automatic Generation:** Generates a unique `sessionId` immediately when the user first loads the app. 
+- **Console Transparency:** Upon every page refresh, payload creation, or manual session reset, the complete, un-truncated UUID session string is explicitly logged to the browser console for developer transparency, while a cleanly cropped, aesthetic version is displayed in the primary UI header.
+- **Data Encapsulation:** All uploaded documents and embeddings must be and are completely isolated per session.
+- **Complete Erasure:** Provides a dedicated frontend endpoint and backend route (`POST /session/reset`) to completely reset/clear active session data.
+
+### Session Isolation
+- **No Data Leakage:** The persistent Vector Store architecture absolutely guarantees no data leakage between different active sessions.
+- **Strict Validation:** All backend APIs strictly validate the session identity (`x-session-id` headers) on every single incoming API request.
+
+---
+
 ## 🔍 Enterprise Observability with LangSmith
 
 This project is deeply instrumented with **LangSmith** to provide production-grade tracing, monitoring, and debugging across the entire RAG pipeline. This goes far beyond basic console logging.
@@ -65,6 +101,28 @@ This project is deeply instrumented with **LangSmith** to provide production-gra
   - ChromaDB Native Insertion Queries 
   - ChromaDB Vector Retrieval (`run_type: "retriever"`)
 - **Metadata Injection**: Each trace dynamically attaches the active `session_id`, logging it directly into the LangSmith dashboard. This guarantees you can analyze user journeys, identify hallucination paths, or debug isolated retrieval failures on a strict per-user basis.
+
+### Dashboard Preview
+![LangSmith Dashboard Preview](/Users/deepakvarma/Desktop/rag-session-app/assets/LangSmith preview.png)
+
+---
+
+## 📦 Third-Party Packages Used
+
+### Frontend (User Interface)
+- **`react` / `react-dom`**: The core component-based UI library.
+- **`framer-motion`**: A production-ready animation library that provides the liquid physics, layout spring transitions, and micro-interactions for the Premium UI.
+- **`lucide-react`**: A beautiful, consistent open-source icon set used throughout the application.
+- **`vite`**: The next-generation frontend tooling offering instant, lightning-fast Hot Module Replacement (HMR) for development.
+
+### Backend (API & Orchestration)
+- **`express`**: The minimalist, unopinionated routing framework powering the REST API endpoints.
+- **`multer`**: Middleware utilized to handle `multipart/form-data`, gracefully buffering uploaded local PDF and text files in memory.
+- **`pdf-parse`**: A robust utility that extracts raw string text blocks from buffered PDF binaries.
+- **`@langchain/core` / `langchain`**: The standard AI framework providing abstractions for Document mapping, `RecursiveCharacterTextSplitter`, and LLM chain architectures.
+- **`@langchain/google-genai`**: The official SDK bridge to authenticate and communicate with Google's Gemini 2.5 Flash and their optimized embedding models.
+- **`chromadb`**: The official Node.js HTTP client to communicate with the physical persistent Chroma SQLite vector store.
+- **`langsmith`**: The observability SDK used natively inside backend routers to log trace telemetry and tool execution durations.
 
 ---
 
@@ -104,6 +162,8 @@ Access the UI locally at `http://localhost:5173`.
 ---
 
 ## 🚧 Known Limitations & Future Enhancements
-- **No Document Management Sidebar**: Currently, old session threads can be fully wiped via the "Reset Session" button, but there is no side-bar to toggle backward between multiple active sessions simultaneously.
-- **File Parsing Constraints**: Only handles `.pdf` and `.txt`. A future improvement would parse `.docx`, `.csv`, or webpage URLs.
-- **Token Precision**: We currently enforce character-based heuristic approximation (~ 4 characters / token) for LLM guardrails. Future enhancements could implement exact `tiktoken` byte-level encoding metrics.
+
+The application is continually evolving. Later iterations of the chatbot will be enhanced with:
+- **Per-Document Filtering (Document Selectors)**: Currently, the LLM analyzes all uploaded documents collectively to synthesize a response. A future update will introduce semantic checkboxes inside the Active Documents sidebar, allowing users to explicitly restrict LLM retrieval to specific subsets of uploaded files rather than the entire available database.
+- **Expanded File Support**: The parser presently only handles `.pdf` and `.txt`. Future pipeline improvements will integrate parsing mechanisms for `.docx`, `.csv`, and direct webpage URL scraping.
+- **Exact Token Precision**: We currently enforce character-based heuristic approximation (~ 4 characters / token) for LLM guardrails out of caution. Future enhancements will implement strict `tiktoken` byte-level encoding metrics for exact capacity boundary calculations.

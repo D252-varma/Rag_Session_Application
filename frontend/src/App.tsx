@@ -1,10 +1,11 @@
 import './App.css'
-import { getOrCreateSessionId, clearSessionLocalStorage } from './session'
+import { getOrCreateSessionId, clearSessionLocalStorage, getActiveDocuments, type DocumentMeta } from './session'
 import { UploadPanel } from './UploadPanel'
 import { ChatWindow } from './ChatWindow'
 import { SettingsModal } from './SettingsModal'
-import { useState } from 'react'
-import { RefreshCw, Settings } from 'lucide-react'
+import { ActiveDocsPanel } from './ActiveDocsPanel'
+import { useState, useEffect } from 'react'
+import { Settings, RefreshCw } from 'lucide-react'
 
 // Main App Component
 function App() {
@@ -19,8 +20,14 @@ function App() {
   const [topK, setTopK] = useState(3);
   const [similarityThreshold, setSimilarityThreshold] = useState(0.15);
 
+  const [activeDocs, setActiveDocs] = useState<DocumentMeta[]>([]);
+
+  useEffect(() => {
+    setActiveDocs(getActiveDocuments(sessionId));
+  }, [sessionId]);
+
   const handleResetSession = async () => {
-    if (!window.confirm("Are you sure you want to reset your session? All uploaded files, knowledge vectors, and chat history will be permanently deleted.")) {
+    if (!window.confirm("Are you sure you want to clear all uploaded documents and start a new session?")) {
       return;
     }
 
@@ -56,7 +63,7 @@ function App() {
       </div>
 
       {/* Floating Header Actions */}
-      <div style={{
+      <div className="app-header-actions" style={{
         position: 'absolute',
         top: '2rem',
         right: '2rem',
@@ -110,12 +117,12 @@ function App() {
           className="premium-glass-panel"
           style={{
             padding: '0.6rem 1.25rem',
-            background: 'rgba(255, 50, 50, 0.05)',
+            background: 'rgba(255, 50, 50, 0.08)',
             color: '#ff6b6b',
-            border: '1px solid rgba(255, 50, 50, 0.2)',
+            border: '1px solid rgba(255, 50, 50, 0.15)',
             cursor: isResetting ? 'not-allowed' : 'pointer',
             fontWeight: 500,
-            fontSize: '0.9rem',
+            fontSize: '0.85rem',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
@@ -124,12 +131,12 @@ function App() {
           onMouseOver={(e) => {
             if (!isResetting) {
               e.currentTarget.style.background = 'rgba(255, 50, 50, 0.15)';
-              e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 50, 50, 0.2)';
+              e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 50, 50, 0.3)';
             }
           }}
           onMouseOut={(e) => {
             if (!isResetting) {
-              e.currentTarget.style.background = 'rgba(255, 50, 50, 0.05)';
+              e.currentTarget.style.background = 'rgba(255, 50, 50, 0.08)';
               e.currentTarget.style.boxShadow = 'var(--glass-shadow)';
             }
           }}
@@ -140,31 +147,85 @@ function App() {
       </div>
 
       <div style={{
-        marginTop: '8rem',
-        marginBottom: '3rem',
+        marginTop: '7rem',
+        marginBottom: '2.5rem',
         textAlign: 'center',
         padding: '0 1rem',
-        animation: 'soft-fade-in 1s ease-out forwards'
-      }}>
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }} className="animate-fade-in app-hero-header">
         <h1 style={{
-          fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
-          fontWeight: 800,
-          background: 'linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.7) 100%)',
+          fontSize: 'clamp(2rem, 5vw, 4rem)',
+          fontWeight: 700,
+          background: 'linear-gradient(to right bottom, #ffffff, var(--text-tertiary))',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           lineHeight: 1.1,
-          letterSpacing: '-0.02em',
-          maxWidth: '900px',
-          margin: '0 auto',
-          textShadow: '0 0 40px rgba(255,255,255,0.1)'
+          letterSpacing: '-0.03em',
+          textShadow: '0 0 30px rgba(255,255,255,0.05)'
         }}>
           THIS IS SESSION-BASED RAG APPLICATION
         </h1>
+        <p style={{
+          fontSize: '1.1rem',
+          color: 'var(--text-secondary)',
+          fontWeight: 400,
+          maxWidth: '500px',
+          letterSpacing: '-0.01em'
+        }}>
+          AI assistant equipped with persistent semantic memory.
+        </p>
       </div>
 
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem', zIndex: 10 }}>
-        <UploadPanel sessionId={sessionId} chunkSize={chunkSize} chunkOverlap={chunkOverlap} />
-        <ChatWindow sessionId={sessionId} topK={topK} similarityThreshold={similarityThreshold} />
+      <div className="app-main-layout" style={{
+        width: '100%',
+        maxWidth: '1000px',
+        margin: '0 auto',
+        zIndex: 10,
+        paddingBottom: '2rem'
+      }}>
+        <div className="top-panels-container">
+          <ActiveDocsPanel
+            documents={activeDocs}
+            onClearDocs={handleResetSession}
+            isClearing={isResetting}
+          />
+          <UploadPanel
+            sessionId={sessionId}
+            chunkSize={chunkSize}
+            chunkOverlap={chunkOverlap}
+            onUploadSuccess={() => setActiveDocs(getActiveDocuments(sessionId))}
+          />
+        </div>
+
+        <div style={{ textAlign: 'center', marginBottom: '-1.5rem', zIndex: 5, marginTop: '2rem' }}>
+          <div style={{
+            display: 'inline-block',
+            fontSize: '0.8rem',
+            color: 'var(--text-tertiary)',
+            background: 'var(--glass-bg)',
+            backdropFilter: 'var(--glass-blur)',
+            padding: '0.6rem 1.25rem',
+            borderRadius: '20px',
+            border: '1px solid var(--glass-border)',
+            maxWidth: '92%',
+            lineHeight: 1.5,
+            wordWrap: 'break-word'
+          }}>
+            ⚠️ Answers are generated from all uploaded documents unless you clear the documents.
+          </div>
+        </div>
+
+        <div style={{ width: '100%', marginTop: '2.5rem' }}>
+          <ChatWindow
+            sessionId={sessionId}
+            topK={topK}
+            similarityThreshold={similarityThreshold}
+            activeDocumentsCount={activeDocs.length}
+          />
+        </div>
       </div>
 
       <SettingsModal

@@ -1,29 +1,34 @@
 :root {
-  /* Premium Dark Theme Palette */
-  --bg-void: #000000;
-  --bg-nebula: #0f172a;
-  /* deep slate blue */
-  --bg-abyss: #020617;
+  /* Premium Dark Theme Palette - Navy to Violet */
+  --bg-void: #020617;
+  --bg-nebula: #0B1021;
+  --bg-abyss: #070914;
 
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.65);
-  --text-tertiary: rgba(255, 255, 255, 0.4);
+  /* Typography */
+  --text-primary: #EAEAEA;
+  --text-secondary: rgba(234, 234, 234, 0.7);
+  --text-tertiary: rgba(234, 234, 234, 0.45);
 
-  /* Apple / Siri accents */
-  --siri-blue: #2A8BFF;
-  --siri-cyan: #22D3EE;
-  --siri-purple: #C084FC;
-  --siri-pink: #F472B6;
+  /* Apple / Siri / Arc Browser Accents */
+  --siri-blue: #0A84FF;
+  --siri-cyan: #32D74B;
+  /* Mapped to slightly greenish/cyan for Siri vibe */
+  --siri-cyan-true: #64D2FF;
+  --siri-purple: #BF5AF2;
+  --siri-pink: #FF375F;
+  --neon-glow: 0 0 15px rgba(100, 210, 255, 0.4);
 
-  /* Glassmorphism Constants */
-  --glass-bg: rgba(255, 255, 255, 0.03);
+  /* Liquid Glassmorphism Constants */
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-bg-strong: rgba(255, 255, 255, 0.04);
   --glass-bg-hover: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-highlight: rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  --glass-blur: blur(25px);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-highlight: rgba(255, 255, 255, 0.25);
+  --glass-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  --glass-blur: blur(24px);
+  --glass-radius: 24px;
 
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color-scheme: dark;
 }
 
@@ -33,23 +38,8 @@
   padding: 0;
 }
 
-@keyframes gradient-flow {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
 body {
-  background: #020617;
-  /* Very deep, almost black slate */
+  background: linear-gradient(135deg, var(--bg-void) 0%, var(--bg-nebula) 50%, var(--bg-abyss) 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
@@ -80,44 +70,46 @@ body {
   z-index: -1;
   overflow: hidden;
   background-color: transparent;
+  pointer-events: none;
 }
 
 .fluid-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.4;
-  animation: fluid-drift 20s infinite alternate ease-in-out;
+  filter: blur(140px);
+  opacity: 0.35;
+  animation: fluid-drift 25s infinite alternate ease-in-out;
+  mix-blend-mode: screen;
 }
 
-/* Strategic glow behind the big typography header */
+/* Strategic glow behind the big typography header (Purple / Blue) */
 .fluid-orb-1 {
-  width: 80vw;
-  height: 400px;
-  background: radial-gradient(circle, rgba(42, 139, 255, 0.25) 0%, transparent 70%);
-  top: -100px;
-  left: 10vw;
-  animation-duration: 25s;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(191, 90, 242, 0.25) 0%, transparent 70%);
+  top: -20%;
+  left: 20vw;
+  animation-duration: 30s;
 }
 
 /* Strategic deep blue glow behind the Upload/Chat area */
 .fluid-orb-2 {
-  width: 700px;
-  height: 700px;
-  background: radial-gradient(circle, rgba(0, 119, 230, 0.15) 0%, transparent 70%);
-  bottom: 10%;
-  left: -150px;
-  animation-duration: 32s;
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, rgba(10, 132, 255, 0.2) 0%, transparent 70%);
+  bottom: -10%;
+  left: -10vw;
+  animation-duration: 35s;
   animation-delay: -5s;
 }
 
 /* Strategic cyan highlight flowing around the right side */
 .fluid-orb-3 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.1) 0%, transparent 70%);
-  top: 30%;
-  right: -200px;
+  width: 45vw;
+  height: 45vw;
+  background: radial-gradient(circle, rgba(100, 210, 255, 0.15) 0%, transparent 70%);
+  top: 40%;
+  right: -10vw;
   animation-duration: 28s;
   animation-delay: -12s;
 }
@@ -127,12 +119,16 @@ body {
     transform: translate(0, 0) scale(1);
   }
 
-  50% {
-    transform: translate(100px, 50px) scale(1.1);
+  33% {
+    transform: translate(5vw, 5vh) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-3vw, 8vh) scale(0.95);
   }
 
   100% {
-    transform: translate(-50px, 100px) scale(0.9);
+    transform: translate(-5vw, -3vh) scale(1.05);
   }
 }
 
@@ -142,9 +138,29 @@ body {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  border-radius: 20px;
+  border-radius: var(--glass-radius);
   box-shadow: var(--glass-shadow);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 50px -10px rgba(0, 0, 0, 0.6);
+}
+
+/* Custom App Layout */
+.app-main-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.top-panels-container {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 2.5rem;
+  width: 100%;
 }
 
 /* Custom Webkit Scrollbar */
@@ -158,7 +174,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--glass-border-highlight);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 10px;
 }
 
@@ -168,46 +184,14 @@ body {
 
 /* Glowing text utility */
 .glow-text {
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
 }
 
-/* Abstract Siri Orb Animation Helpers */
-@keyframes orb-pulse {
-  0% {
-    transform: scale(0.95) rotate(0deg);
-    opacity: 0.8;
-  }
-
-  50% {
-    transform: scale(1.05) rotate(180deg);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(0.95) rotate(360deg);
-    opacity: 0.8;
-  }
-}
-
-@keyframes orb-float {
-  0% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-/* Fade in for layout */
+/* Animations */
 @keyframes soft-fade-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
 
   to {
@@ -218,4 +202,182 @@ body {
 
 .animate-fade-in {
   animation: soft-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Shimmer Loading Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Typing Dots Animation */
+.typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--siri-cyan-true);
+  margin: 0 3px;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typing {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.3;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 8px var(--siri-cyan-true);
+  }
+}
+
+/* Input Bar Focus Glow */
+.input-glow-focus:focus-within {
+  border-color: rgba(100, 210, 255, 0.5) !important;
+  box-shadow: 0 0 25px rgba(100, 210, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Styled Accordion / Details */
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary {
+  list-style: none;
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+summary::before {
+  content: "›";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) rotate(0deg);
+  transition: transform 0.2s ease;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--text-tertiary);
+}
+
+details[open] summary::before {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+/* ================================
+   Mobile Responsiveness & Viewports
+   ================================ */
+@media (max-width: 768px) {
+  .app-header-actions {
+    top: 1rem !important;
+    right: 1rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .app-header-actions button {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .app-header-actions>div {
+    display: none !important;
+    /* Hide Session ID badge on mobile overheads */
+  }
+
+  .app-hero-header {
+    margin-top: 5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .app-hero-header h1 {
+    font-size: 2.2rem !important;
+  }
+
+  .app-main-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding-bottom: 5rem !important;
+  }
+
+  .top-panels-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .active-docs-sidebar {
+    min-height: auto !important;
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+  }
+
+  .main-content-area>section {
+    margin: 0 auto !important;
+  }
+
+  .chat-window-wrapper {
+    height: 70vh !important;
+    border-radius: 16px !important;
+  }
+
+  .chat-window-scroll-area {
+    padding: 1rem !important;
+    padding-bottom: 7rem !important;
+    gap: 1.5rem !important;
+  }
+
+  .message-bubble {
+    max-width: 95% !important;
+    padding: 0.8rem 1rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .input-glow-focus {
+    width: calc(100% - 1.5rem) !important;
+    bottom: 1rem !important;
+    padding: 0.4rem 0.4rem 0.4rem 1rem !important;
+  }
+
+  .input-glow-focus input {
+    font-size: 0.95rem !important;
+  }
+
+  .fluid-orb-1,
+  .fluid-orb-2,
+  .fluid-orb-3 {
+    width: 100vw !important;
+    height: 100vw !important;
+    filter: blur(80px) !important;
+  }
 }

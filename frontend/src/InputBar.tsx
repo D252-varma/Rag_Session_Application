@@ -20,20 +20,21 @@ export function InputBar({ query, setQuery, disabled, onSubmit }: InputBarProps)
                 bottom: '1.5rem',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                width: 'calc(100% - 2rem)',
-                maxWidth: '800px',
+                width: 'min(calc(100vw - 2rem), 800px)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.75rem',
                 padding: '0.6rem 0.8rem 0.6rem 1.5rem',
-                background: 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)',
-                border: '1px solid rgba(255, 255, 255, 0.4)',
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'var(--glass-blur)',
+                WebkitBackdropFilter: 'var(--glass-blur)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
                 borderRadius: '99px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
                 zIndex: 999,
+                transition: 'all 0.3s ease'
             }}
+            className="input-glow-focus"
         >
             <input
                 type="text"
@@ -58,11 +59,11 @@ export function InputBar({ query, setQuery, disabled, onSubmit }: InputBarProps)
                 whileHover={!(disabled || !query.trim()) ? { scale: 1.05 } : {}}
                 whileTap={!(disabled || !query.trim()) ? { scale: 0.95 } : {}}
                 style={{
-                    width: '36px',
-                    height: '36px',
+                    width: '38px',
+                    height: '38px',
                     borderRadius: '50%',
                     border: 'none',
-                    background: 'transparent',
+                    background: (disabled || !query.trim()) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, var(--siri-blue) 0%, var(--siri-purple) 100%)',
                     color: (disabled || !query.trim()) ? 'rgba(255, 255, 255, 0.4)' : '#ffffff',
                     display: 'flex',
                     justifyContent: 'center',

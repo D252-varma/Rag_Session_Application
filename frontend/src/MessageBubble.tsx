@@ -19,19 +19,19 @@ export function MessageBubble({ msg }: { msg: ChatMessage }) {
                 width: '100%'
             }}
         >
-            <div style={{
+            <div className="message-bubble" style={{
                 maxWidth: '85%',
                 padding: '1rem 1.25rem',
-                borderRadius: '20px',
-                borderBottomRightRadius: isUser ? '4px' : '20px',
-                borderBottomLeftRadius: !isUser ? '4px' : '20px',
+                borderRadius: '24px',
+                borderBottomRightRadius: isUser ? '4px' : '24px',
+                borderBottomLeftRadius: !isUser ? '4px' : '24px',
                 background: isUser
-                    ? 'linear-gradient(135deg, rgba(42, 139, 255, 0.2), rgba(192, 132, 252, 0.2))'
-                    : (msg.status === 'error' ? 'rgba(255, 50, 50, 0.1)' : 'var(--glass-bg)'),
+                    ? 'linear-gradient(135deg, rgba(10, 132, 255, 0.25), rgba(191, 90, 242, 0.25))'
+                    : (msg.status === 'error' ? 'rgba(255, 50, 50, 0.1)' : 'var(--glass-bg-strong)'),
                 backdropFilter: 'var(--glass-blur)',
                 color: msg.status === 'error' ? '#ff6b6b' : 'var(--text-primary)',
-                border: `1px solid ${isUser ? 'rgba(42, 139, 255, 0.4)' : 'var(--glass-border)'}`,
-                boxShadow: isUser ? '0 0 20px rgba(192, 132, 252, 0.1)' : '0 4px 15px rgba(0,0,0,0.1)',
+                border: `1px solid ${isUser ? 'rgba(255,255,255,0.1)' : 'var(--glass-border)'}`,
+                boxShadow: isUser ? '0 8px 32px rgba(191, 90, 242, 0.15)' : '0 10px 40px rgba(0,0,0,0.2)',
                 whiteSpace: 'pre-wrap',
                 fontSize: '0.95rem',
                 lineHeight: 1.6,
@@ -39,10 +39,14 @@ export function MessageBubble({ msg }: { msg: ChatMessage }) {
                 overflow: 'hidden'
             }}>
                 {msg.status === 'searching' ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--siri-cyan)' }}>
-                        <Sparkles size={16} className="animate-pulse" />
-                        <span style={{ animation: 'pulse 1.5s infinite' }}>Synthesizing knowledge...</span>
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--siri-cyan)' }}>
+                        <Sparkles size={16} />
+                        <div style={{ display: 'flex', alignItems: 'center', height: '100%', paddingTop: '0.2rem' }}>
+                            <span className="typing-dot"></span>
+                            <span className="typing-dot"></span>
+                            <span className="typing-dot"></span>
+                        </div>
+                    </div>
                 ) : msg.content}
             </div>
 
@@ -86,22 +90,27 @@ export function MessageBubble({ msg }: { msg: ChatMessage }) {
 
                     {(msg.sources && msg.sources.length > 0) && (
                         <details style={{
-                            fontSize: '0.75rem',
+                            fontSize: '0.8rem',
                             color: 'var(--text-secondary)',
-                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                            padding: '0.35rem 0.75rem',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            marginTop: '0.25rem',
-                            cursor: 'pointer'
+                            backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                            padding: '0.5rem 0.8rem',
+                            borderRadius: '12px',
+                            border: '1px solid var(--glass-border)',
+                            marginTop: '0.5rem',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                         }}>
-                            <summary style={{ outline: 'none' }}>Source Evidence</summary>
-                            <ul style={{ paddingLeft: '1rem', marginTop: '0.5rem', listStyle: 'none' }}>
+                            <summary style={{ outline: 'none', fontWeight: 500 }}>View Sources</summary>
+                            <ul style={{ paddingLeft: '0', marginTop: '0.75rem', listStyle: 'none' }}>
                                 {msg.sources.map((src, i) => (
-                                    <li key={i} style={{ marginBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
-                                        <strong style={{ color: 'var(--siri-cyan)' }}>{src.chunk.fileName || 'Doc'}</strong> <span style={{ opacity: 0.6 }}>(Match: {(src.score * 100).toFixed(1)}%)</span>
-                                        <br />
-                                        <span style={{ fontStyle: 'italic', opacity: 0.7, display: 'inline-block', marginTop: '0.25rem' }}>"{src.chunk.text.substring(0, 100)}..."</span>
+                                    <li key={i} style={{ marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.75rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                            <strong style={{ color: 'var(--siri-cyan)' }}>{src.chunk.fileName || 'Doc'}</strong>
+                                            <span style={{ opacity: 0.6, fontSize: '0.75rem' }}>Match: {(src.score * 100).toFixed(1)}%</span>
+                                        </div>
+                                        <div style={{ fontStyle: 'italic', opacity: 0.7, lineHeight: 1.4 }}>
+                                            "{src.chunk.text.substring(0, 150)}..."
+                                        </div>
                                     </li>
                                 ))}
                             </ul>

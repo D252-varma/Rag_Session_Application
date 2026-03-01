@@ -92,7 +92,7 @@ export function SettingsModal({
                                 <Settings size={24} />
                             </div>
                             <div>
-                                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>Guardrails & Retrieval</h2>
+                                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>Retrieval Configurable Settings</h2>
                                 <p style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', margin: '0.2rem 0 0 0' }}>Configure global RAG memory parameters.</p>
                             </div>
                         </div>
