@@ -22,16 +22,14 @@ You can dynamically explicitly tweak backend vector metrics strictly from the fr
 - **Top K**: Dictate the absolute number of contextual vectors retrieved.
 - **Similarity threshold**: Command how strictly the LLM filters out low-matching chunks to prevent hallucinations.
 
-![Retrieval Configurable Settings preview](/Users/deepakvarma/Desktop/rag-session-app/assets/Retrieval Configurable Settings preview.png)
-
+![Retrieval Configurable Settings preview](./assets/Retrieval%20Configurable%20Settings%20preview.png)
 ### Active Document Management & Zero Hallucination
 - **Active Documents Sidebar**: A dedicated panel that dynamically lists all uploaded and vectorized files resident in the current knowledge base.
 - **Multi-Document Retrieval**: The chatbot seamlessly supports concurrent multi-document retrieval. Users can choose to clear the context completely to start a new session, or continue querying across all historically uploaded documents within their active session. 
 - **Clear Chat & Session Reset**: Easily erase the current conversation via "Clear Chat" or fully purge all vectorized documents and start fresh via "Reset Session".
 - **Zero Hallucination Guarantee**: Because the UI strictly manages active context files and locks queries when empty, the AI is 100% constrained to ground its answers exclusively in the uploaded sources. Each response strictly traces back to the source attribution to ensure transparency and utterly prevent hallucinations.
 
-![Active Document Management view](/Users/deepakvarma/Desktop/rag-session-app/assets/Active Document Management view.png)
-
+![Active Document Management view](./assets/Active%20Document%20Management%20view.png)
 ---
 
 ## 🏗 System Architecture Flow
@@ -103,9 +101,7 @@ This project is deeply instrumented with **LangSmith** to provide production-gra
 - **Metadata Injection**: Each trace dynamically attaches the active `session_id`, logging it directly into the LangSmith dashboard. This guarantees you can analyze user journeys, identify hallucination paths, or debug isolated retrieval failures on a strict per-user basis.
 
 ### Dashboard Preview
-![LangSmith Dashboard Preview](/Users/deepakvarma/Desktop/rag-session-app/assets/LangSmith preview.png)
-
----
+![LangSmith Dashboard Preview](./assets/LangSmith%20preview.png)---
 
 ## 📦 Third-Party Packages Used
 
